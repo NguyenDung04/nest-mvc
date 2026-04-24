@@ -1,0 +1,329 @@
+# README Backend - NestJS MVC + REST API
+
+## 1. Giới thiệu
+
+Đây là backend cho dự án mẫu sử dụng **NestJS + MySQL + TypeORM + HBS + REST API**.
+
+Hệ thống hiện tại đã triển khai các phần chính:
+- Xác thực người dùng bằng JWT
+- Phân quyền theo role `admin` / `user`
+- CRUD `users`, `categories`, `products`
+- Soft delete và restore
+- Upload ảnh sản phẩm
+- Pagination, search, filter, sort
+- Swagger API docs
+- Rate limit cho auth
+- Global exception filter, response interceptor, request logger
+- Winston logging
+
+## 2. Công nghệ sử dụng
+
+- NestJS
+- TypeORM
+- MySQL
+- HBS (server-side rendering)
+- Swagger
+- JWT Authentication
+- Role-based Authorization
+- Multer upload file
+- Winston logger
+- Throttler rate limit
+
+## 3. Cấu trúc thư mục chính
+
+```text
+src/
+  common/
+    constants/
+    decorators/
+    dto/
+    filters/
+    interceptors/
+    logger/
+    middleware/
+    utils/
+  config/
+  database/
+    migrations/
+    data-source.ts
+  modules/
+    auth/
+    users/
+    categories/
+    products/
+  views/
+public/
+  uploads/
+    products/
+```
+
+## 4. Chức năng backend đã có
+
+### Auth
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/forgot-password`
+- `POST /api/auth/reset-password`
+
+### Users
+- `GET /api/users/me`
+- `PATCH /api/users/me`
+- `GET /api/users` (admin)
+- `GET /api/users/:id` (admin)
+- `PATCH /api/users/:id` (admin)
+- `DELETE /api/users/:id` (admin, soft delete)
+- `POST /api/users/:id/restore` (admin)
+
+### Categories
+- `GET /api/categories`
+- `GET /api/categories/:id`
+- `POST /api/categories` (admin)
+- `PATCH /api/categories/:id` (admin)
+- `DELETE /api/categories/:id` (admin, soft delete)
+- `POST /api/categories/:id/restore` (admin)
+
+### Products
+- `GET /api/products`
+- `GET /api/products/:id`
+- `POST /api/products` (admin)
+- `PATCH /api/products/:id` (admin)
+- `DELETE /api/products/:id` (admin, soft delete)
+- `POST /api/products/:id/restore` (admin)
+
+Ngoài ra `products` hiện hỗ trợ:
+- upload file ảnh
+- search theo keyword
+- filter `isActive`, `categoryId`
+- pagination
+- sort
+
+## 5. Yêu cầu môi trường
+
+- Node.js `v20.20.2`
+- MySQL `8.x` hoặc tương đương
+- npm
+
+## 6. Cài đặt project
+
+### 6.1. Cài package
+
+```bash
+npm install
+```
+
+### 6.2. Tạo database
+
+Ví dụ:
+
+```sql
+CREATE DATABASE nest_mvc_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 6.3. Tạo file env
+
+Tạo file `.env.development` từ `.env.example`.
+
+Ví dụ:
+
+```env
+APP_NAME=nest-mvc
+NODE_ENV=development
+APP_HOST=0.0.0.0
+APP_PORT=8080
+APP_URL=http://localhost:8080
+API_PREFIX=api
+
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USERNAME=root
+DB_PASSWORD=
+DB_DATABASE=nest_mvc_dev
+DB_LOGGING=false
+
+JWT_SECRET=your_super_secret_jwt_key
+JWT_EXPIRES_IN=1d
+COOKIE_SECRET=your_cookie_secret
+CSRF_SECRET=your_csrf_secret
+
+ENABLE_SWAGGER=true
+ENABLE_HELMET=true
+ENABLE_CORS=true
+ENABLE_CSRF=false
+
+CORS_ORIGIN=http://localhost:8080,http://localhost:3001
+
+THROTTLE_TTL=60
+THROTTLE_LIMIT=20
+
+SHOW_RESET_TOKEN_IN_RESPONSE=true
+```
+
+## 7. Chạy migration
+
+### 7.1. Chạy migration schema
+
+```bash
+npm run migration:run
+```
+
+### 7.2. Nếu cần revert migration
+
+```bash
+npm run migration:revert
+```
+
+## 8. Chạy ứng dụng
+
+### 8.1. Chạy backend dev
+
+```bash
+npm run start:dev
+```
+
+### 8.2. Chạy backend + tailwind watch
+
+```bash
+npm run dev
+```
+
+## 9. Swagger
+
+Sau khi app chạy, mở:
+
+```text
+http://localhost:8080/docs
+```
+
+## 10. Upload ảnh sản phẩm
+
+Ảnh sản phẩm hiện được lưu tại:
+
+```text
+public/uploads/products
+```
+
+Khi tạo hoặc cập nhật sản phẩm bằng Postman:
+- Chọn `Body -> form-data`
+- Thêm các field text như `name`, `slug`, `price`, `stockQuantity`, `categoryId`
+- Nếu upload file, dùng key:
+
+```text
+file
+```
+
+- Nếu không upload file, có thể truyền `image` là URL string.
+
+## 11. Rate limit
+
+Rate limit hiện áp dụng cho auth:
+- `register`: 5 lần / 60 giây
+- `login`: 5 lần / 60 giây
+- `forgot-password`: 3 lần / 60 giây
+- `reset-password`: 3 lần / 60 giây
+
+## 12. Response format chuẩn
+
+### Success
+
+```json
+{
+  "success": true,
+  "statusCode": 200,
+  "message": "Success",
+  "data": {},
+  "meta": {
+    "timestamp": "2026-04-24T00:00:00.000Z",
+    "path": "/api/example"
+  }
+}
+```
+
+### Error
+
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": null,
+  "path": "/api/example",
+  "timestamp": "2026-04-24T00:00:00.000Z",
+  "requestId": "uuid"
+}
+```
+
+## 13. Tài khoản test
+
+### Admin
+
+```text
+email: admin1@example.com
+password: 123456
+```
+
+### User
+
+```text
+email: user1@example.com
+password: 123456
+```
+
+> Lưu ý: nếu bạn đã test reset password thì mật khẩu thực tế có thể đã thay đổi.
+
+## 14. Quy tắc nghiệp vụ hiện có
+
+- Email được normalize về lowercase
+- Slug được normalize trước khi lưu
+- User thường không được đổi role qua route profile
+- Admin không được tự xóa chính mình
+- Admin không được tự khóa chính mình
+- Product bắt buộc `categoryId` tồn tại
+- Soft delete áp dụng cho `users`, `categories`, `products`
+
+## 15. Logging
+
+Hệ thống hiện có:
+- Request logger middleware
+- Global exception filter
+- Winston logger
+- `requestId` trong error response
+- Có thể log ra file nếu bật cấu hình file transport
+
+## 16. Các lệnh hữu ích
+
+```bash
+npm run start:dev
+npm run dev
+npm run build
+npm run migration:run
+npm run migration:revert
+npm run test
+npm run test:e2e
+npm run lint
+npm run format
+```
+
+## 17. Gợi ý phát triển tiếp
+
+- Tách admin HBS và API rõ ràng hơn
+- Health check cho DB/Redis
+- Redis cho OTP / token blacklist / cache
+- Refresh token / logout strategy
+- E2E test cho auth và CRUD
+- Upload ảnh lên cloud storage
+- Dashboard admin HBS gọi API backend
+
+## 18. Trạng thái hiện tại
+
+Backend hiện tại đủ tốt cho:
+- đồ án
+- demo
+- bài tập lớn
+- MVP backend
+
+Nếu muốn production-ready hơn, nên làm thêm:
+- refresh token
+- health check
+- Redis
+- test tự động đầy đủ
+- logging/audit nâng cao

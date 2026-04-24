@@ -9,7 +9,7 @@ import databaseConfig from './config/database.config';
 import { winstonConfig } from './common/logger/winston.config';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 
-import { AppController } from './app.controller';
+// import { AppController } from './app.controller';
 
 import { User } from './modules/users/entities/user.entity';
 import { Category } from './modules/categories/entities/category.entity';
@@ -22,6 +22,8 @@ import { RolesGuard } from './modules/auth/guards/roles.guard';
 import { UsersModule } from './modules/users/users.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { ProductsModule } from './modules/products/products.module';
+
+import { WebModule } from './web/web.module';
 
 @Module({
   imports: [
@@ -66,8 +68,9 @@ import { ProductsModule } from './modules/products/products.module';
     UsersModule,
     CategoriesModule,
     ProductsModule,
+    WebModule,
   ],
-  controllers: [AppController],
+  // controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,

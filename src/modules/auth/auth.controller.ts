@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Res,
+} from '@nestjs/common';
+import type { Response } from 'express';
 import {
   ApiBadRequestResponse,
   ApiBody,
@@ -52,8 +60,23 @@ export class AuthController {
   @ApiTooManyRequestsResponse({
     description: 'Bạn đã đăng nhập sai quá nhiều lần. Vui lòng thử lại sau',
   })
-  async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto);
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.authService.login(loginDto);
+
+    const accessToken = result.data.accessToken;
+
+    res.cookie('access_token', accessToken, {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: false,
+      path: '/',
+      maxAge: 1000 * 60 * 60 * 24,
+    });
+
+    return result;
   }
 
   @Public()
@@ -90,5 +113,23 @@ export class AuthController {
   })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Đăng xuất và xóa cookie JWT' })
+  @ApiOkResponse({ description: 'Đăng xuất thành công' })
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('access_token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: false,
+      path: '/',
+    });
+
+    return {
+      message: 'Đăng xuất thành công',
+    };
   }
 }
